@@ -6,6 +6,9 @@
 #include <cstdlib>
 #include <cmath>
 
+namespace rztl
+{
+
 template <typename T>
 class Placeholder
 {
@@ -163,3 +166,5 @@ public:
 
 
 };
+
+}

@@ -4,6 +4,9 @@
 #include <cstdint>
 #include <cstdlib>
 
+namespace rztl
+{
+
 template <typename T>
 class DynamicArray
 {
@@ -95,3 +98,5 @@ public:
 	}
 
 };
+
+}

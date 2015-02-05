@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <iostream>
 
+namespace rztl
+{
+
 template <typename T>
 class Matrix2D
 {
@@ -142,4 +145,5 @@ public:
 
 };
 
+}
 //template class Matrix2D<int>;

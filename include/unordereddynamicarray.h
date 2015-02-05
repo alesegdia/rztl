@@ -2,6 +2,9 @@
 
 #include "./dynamicarray.h"
 
+namespace rztl
+{
+
 template <typename T>
 class UnorderedDynamicArray : public DynamicArray<T>
 {
@@ -21,3 +24,4 @@ public:
 private:
 };
 
+}

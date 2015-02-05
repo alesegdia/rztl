@@ -1,6 +1,6 @@
 
 #include <cstdio>
-#include "pool.h"
+#include "../include/pool.h"
 #include <vector>
 
 struct Foo {
@@ -11,7 +11,7 @@ struct Foo {
 
 int main( int argc, char** argv )
 {
-	Pool<Foo> pool(32);
+	rztl::Pool<Foo> pool(32);
 	std::vector<Foo*> vec;
 
 	for( int i = 0; i < 1600; i++ )
