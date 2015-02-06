@@ -109,7 +109,7 @@ public:
 		current = block_llist;
 		while( ((void*)current) != NULL )
 		{
-			printf("Trying to free %d\n", current);
+			printf("Trying to free %p\n", current);
 			next = current->next;
 			free(current);
 			current = next;
