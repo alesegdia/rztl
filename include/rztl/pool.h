@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cmath>
+#include <vector>
 
 namespace rztl
 {
@@ -25,43 +26,39 @@ class Pool
 
 private:
 
-	struct Block {
-		Block* next;
-		typedef union Item {
-		Placeholder<T> obj_data;
-			Item* next;
-		} Item;
-		Item item[1];
+	union Item {
+		Item() : next{} {}
+		~Item() {}
+		T obj_data;
+		Item* next;
 	};
 
 
-	Block* block_llist;
-	typedef typename Pool<T>::Block::Item ItemType;
-	ItemType *free_first, *free_last;
+	Item *free_first, *free_last;
 	size_t bytes_per_block, num_items;
+	std::vector<Item*> block_list;
 
-	/*
-	 * Reserva memoria para un bloque entero incluida la cabecera.
-	 * Establece los enlaces de cada item al siguiente.
-	 * Actualiza free_first y free_last con el primero y último Item del bloque respectivamente
-	 */
-	Block* AllocBlock()
+	void AllocBlock()
 	{
-		Block *p;
-		ItemType *item;
-		p = ((Block*)malloc(bytes_per_block));
-		// printf("Alloc'ing %d\n", p);
-		free_first = p->item;
-		item = ((ItemType*)((void*)p->item));
-		for( int i = 0; i < num_items; i++ )
+		// allocate items
+		Item* new_block = new Item[100];
+
+		// build linked list of free elements
+		for( int i = 0; i < 100; i++ )
 		{
-			//printf("%d, ", i);
-			fflush(0);
-			item[i].next = item+i+1;
+			new_block[i].next = &(new_block[i+1]);
 		}
-		free_last = (item+num_items-1);
-		item[num_items-1].next = NULL;
-		return p;
+
+		// mark last pool element
+		new_block[99].next = NULL;
+
+		// assign first available item
+		free_first = new_block;
+
+		free_last = &new_block[99];
+
+		// push block to block_list
+		block_list.push_back(new_block);
 	}
 
 public:
@@ -70,88 +67,40 @@ public:
 	static constexpr uint16_t MIN_ITEMS = 32;
 	static constexpr uint16_t MIN_NUM_PAGES = 2;
 
-	/*
-	 * Crea la pool calculando el tamaño de bloque para que tenga como
-	 * mínimo, count_items_per_block, alojando en número de páginas
-	 * para favorecer el acierto a accesos de memoria
-	 */
 	Pool( uint32_t count_items_per_block = MIN_ITEMS )
 	{
-		// numero de paginas por bloque
-		size_t num_pages = ceil(float(count_items_per_block * sizeof(T)) / float(PAGE_SIZE));
-		if( num_pages < MIN_NUM_PAGES ) num_pages = MIN_NUM_PAGES;
-
-		// numero de items por bloque
-		size_t sizeofitem = sizeof(ItemType);
-		num_items = floor(( float(num_pages * 4096) ) / float(sizeofitem));
-
-		// numero de bytes por bloque
-		// cabecera (incluye un item)     + numero restante de items
-		bytes_per_block = sizeof( Block ) + sizeofitem * ( num_items - 1 );
-
-		printf("num_pages = %lu\n", num_pages);
-		printf("num_items = %lu\n", num_items);
-		printf("sizeof(Block) = %lu\n", sizeof(Block));
-		printf("sizeof(T) = %lu\n", sizeof(T));
-		printf("sizeofitem = %lu\n", sizeofitem);
-		printf("sizeof(decltype...) = %lu\n", sizeof(decltype(block_llist->item[0])));
-		printf("bytesperblock: %lu\n", bytes_per_block);
-		printf("itemsperblock: %f\n", floor(((float)bytes_per_block)/((float)num_items)));
-
-		// pedir primer bloque y establecer enlace
-		block_llist = AllocBlock();
-		block_llist->next = NULL;
+		AllocBlock();
 	}
 
 	~Pool(){
-		// borramos todos los bloques
-		Block *current, *next;
-		current = block_llist;
-		while( ((void*)current) != NULL )
+		int i = 0;
+		for( auto it : block_list )
 		{
-			printf("Trying to free %p\n", current);
-			next = current->next;
-			free(current);
-			current = next;
+			i++;
+			Item* iter = it;
+			while(iter)
+			{
+				iter->~Item();
+				iter = iter->next;
+			}
+			delete [] it;
 		}
+		printf("eliminados %d elementos.\n", i);
 	}
 
-	/*
-	 * Se construye despues de avanzar el free_first para no sobreescribir el next
-	 * del free_first y poderlo avanzar.
-	 */
 	template <typename...ARGS>
 	T* Create(ARGS&&...args)
 	{
-		// si esta lleno, reservamos bloque nuevo al final
-		if( (void*) free_first == NULL )
+		if( free_first->next == NULL )
 		{
-			Block* new_block, *current_block, *prev_block;
-
-			// creamos el bloque nuevo
-			new_block = AllocBlock();
-
-			// nos vamos al último
-			current_block = block_llist;
-			while( ((void*)current_block) != NULL )
-			{
-				prev_block = current_block;
-				current_block = current_block->next;
-			}
-
-			// colocamos el nuevo en el último
-			prev_block->next = ((Block*)new_block);
-			new_block->next = NULL;
-
-			// actualizamos el free_first y free_last
-			free_first = new_block->item;
-			free_last = new_block->item+num_items-1;
+			AllocBlock();
 		}
 
-		T* obj = (T*)&(free_first->obj_data);
-		free_first=free_first->next;
+		Item* item = free_first;
+		free_first = free_first->next;
 
-		new (obj) T(args...);
+		T* obj = new(&item->obj_data) T();
+
 		return obj;
 	}
 
@@ -161,7 +110,9 @@ public:
 	void Destroy( T* e )
 	{
 		e->~T();
-		free_last = (ItemType*)e;
+		free_last->next = (Item*)e;
+		free_last = (Item*)e;
+		free_last->next = NULL;
 	}
 
 
