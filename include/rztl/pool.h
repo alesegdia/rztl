@@ -27,16 +27,22 @@ class Pool
 private:
 
 	union Item {
-		Item() : next{} {}
+		Item() : state{} {}
 		~Item() {}
 		T obj_data;
-		Item* next;
+		struct {
+			Item* next;
+			bool in_use = false;
+		} state;
 	};
 
 
 	Item *free_first, *free_last;
 	size_t bytes_per_block, num_items;
 	std::vector<Item*> block_list;
+
+	// ugly fix!
+	std::vector<T*> items_in_use;
 
 	void AllocBlock()
 	{
@@ -46,11 +52,11 @@ private:
 		// build linked list of free elements
 		for( int i = 0; i < 100; i++ )
 		{
-			new_block[i].next = &(new_block[i+1]);
+			new_block[i].state.next = new_block+i+1;
 		}
 
 		// mark last pool element
-		new_block[99].next = NULL;
+		new_block[99].state.next = NULL;
 
 		// assign first available item
 		free_first = new_block;
@@ -74,15 +80,13 @@ public:
 
 	~Pool(){
 		int i = 0;
+		for( auto it : items_in_use )
+		{
+			it->~T();
+		}
 		for( auto it : block_list )
 		{
 			i++;
-			Item* iter = it;
-			while(iter)
-			{
-				iter->~Item();
-				iter = iter->next;
-			}
 			delete [] it;
 		}
 		printf("eliminados %d elementos.\n", i);
@@ -91,15 +95,16 @@ public:
 	template <typename...ARGS>
 	T* Create(ARGS&&...args)
 	{
-		if( free_first->next == NULL )
+		if( free_first->state.next == NULL )
 		{
 			AllocBlock();
 		}
 
 		Item* item = free_first;
-		free_first = free_first->next;
+		free_first = free_first->state.next;
 
 		T* obj = new(&item->obj_data) T();
+		items_in_use.push_back(obj);
 
 		return obj;
 	}
@@ -110,9 +115,9 @@ public:
 	void Destroy( T* e )
 	{
 		e->~T();
-		free_last->next = (Item*)e;
+		free_last->state.next = (Item*)e;
 		free_last = (Item*)e;
-		free_last->next = NULL;
+		free_last->state.next = NULL;
 	}
 
 
