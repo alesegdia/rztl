@@ -103,7 +103,7 @@ public:
 		Item* item = free_first;
 		free_first = free_first->state.next;
 
-		T* obj = new(&item->obj_data) T();
+		T* obj = new(&item->obj_data) T(args...);
 		items_in_use.push_back(obj);
 
 		return obj;
