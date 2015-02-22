@@ -114,6 +114,7 @@ public:
 	 */
 	void Destroy( T* e )
 	{
+		items_in_use.erase( std::find( items_in_use.begin(), items_in_use.end(), e ) );
 		e->~T();
 		free_last->state.next = (Item*)e;
 		free_last = (Item*)e;
