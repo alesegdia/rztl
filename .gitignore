@@ -2,5 +2,6 @@
 *.gcda
 *.gcno
 *.gch
+*.sw*
 00
 
