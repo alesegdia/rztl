@@ -13,20 +13,20 @@ class DynamicArray
 
 protected:
 
-	static const size_t INITIAL_SIZE = 500;
-	static const size_t REALLOC_STEP = 5;
+	static const size_t INITIAL_SIZE = 128;
+	static const size_t REALLOC_STEP = 16;
 
-	T* data;
-	size_t size = 0;
-	size_t capacity;
+	T* m_data;
+	size_t m_size = 0;
+	size_t m_capacity;
 
-	void Realloc( size_t realloc_step = REALLOC_STEP )
+	void realloc( size_t realloc_step = REALLOC_STEP )
 	{
-		capacity += realloc_step;
-		void* p = realloc( data, capacity * sizeof(T) );
-		if( p || !capacity )
+		m_capacity += realloc_step;
+		void* p = realloc( m_data, m_capacity * sizeof(T) );
+		if( p || !m_capacity )
 		{
-			data = ((T*)p);
+			m_data = ((T*)p);
 		}
 	}
 
@@ -34,67 +34,67 @@ public:
 
 	DynamicArray( size_t initial_size = INITIAL_SIZE )
 	{
-		capacity = initial_size;
-		size = 0;
-		data = ((T*)malloc( initial_size * sizeof(T) ));
+		m_capacity = initial_size;
+		m_size = 0;
+		m_data = ((T*)malloc( initial_size * sizeof(T) ));
 	}
 
 	virtual ~DynamicArray( )
 	{
-		if( data )
+		if( m_data )
 		{
-			free(data);
+			free(m_data);
 		}
 	}
 
-	void Add( T item )
+	void add( T item )
 	{
-		if( size+1 > capacity )
+		if( m_size+1 > m_capacity )
 		{
-			Realloc();
+			realloc();
 		}
 
-		data[size] = item;
-		size++;
+		m_data[m_size] = item;
+		m_size++;
 	}
 
-	T& Back()
+	T& back()
 	{
-		if( !IsEmpty() )
+		if( !isEmpty() )
 		{
-			return data[size-1];
+			return m_data[m_size-1];
 		}
 	}
 
 	T& operator[]( size_t index )
 	{
 		// no error check
-		return data[index];
+		return m_data[index];
 	}
 
-	void Clear()
+	void clear()
 	{
-		size = 0;
+		m_size = 0;
 	}
 
-	void RemoveLast()
+	void removeLast()
 	{
-		if( !IsEmpty() ) size--;
+		if( !isEmpty() ) m_size--;
 	}
 
-	bool IsEmpty()
+	bool isEmpty()
 	{
-		return size == 0;
+		return m_size == 0;
 	}
 
-	size_t Size()
+	size_t size()
 	{
-		return size;
+		return m_size;
 	}
 
-	T* GetRawData()
+	T* getRawData()
 	{
-		return data;
+		return m_data;
 	}
 
 };
