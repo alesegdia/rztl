@@ -20,7 +20,7 @@ protected:
 	size_t m_size = 0;
 	size_t m_capacity;
 
-	void realloc( size_t realloc_step = REALLOC_STEP )
+	void innerRealloc( size_t realloc_step = REALLOC_STEP )
 	{
 		m_capacity += realloc_step;
 		void* p = realloc( m_data, m_capacity * sizeof(T) );
@@ -51,7 +51,7 @@ public:
 	{
 		if( m_size+1 > m_capacity )
 		{
-			realloc();
+			innerRealloc();
 		}
 
 		m_data[m_size] = item;
