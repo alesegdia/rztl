@@ -5,7 +5,8 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstdint>
-
+#include <tuple>
+#include <vector>
 
 template <typename Class, typename T>
 struct Offset {
@@ -16,24 +17,43 @@ template <typename Class, typename T>
 size_t Offset<Class, T>::offset = 0;
 
 template <typename Class, typename... Rest>
-struct ComputeSize;
+struct ComputeOffset;
 
 template <typename Class, typename First, typename... Rest>
-struct ComputeSize<Class, First, Rest...>
+struct ComputeOffset<Class, First, Rest...>
 {
-	static size_t getSize() {
-		size_t restsize = ComputeSize<Class, Rest...>::getSize();
+	static size_t computeOffset() {
+		size_t restsize = ComputeOffset<Class, Rest...>::computeOffset();
 		Offset<Class, First>::offset = restsize;
 		return sizeof(First) + restsize;
 	}
 };
 
 template <typename Class>
-struct ComputeSize<Class> {
-	static size_t getSize() {
+struct ComputeOffset<Class> {
+	static size_t computeOffset() {
 		return 0;
 	}
 };
+
+template <typename Class, typename... Rest>
+struct ComputeSize;
+
+template <typename Class, typename First, typename... Rest>
+struct ComputeSize<Class, First, Rest...>
+{
+	static constexpr size_t getSize() {
+		return sizeof(First) + ComputeSize<Class, Rest...>::getSize();
+	}
+};
+
+template <typename Class>
+struct ComputeSize<Class> {
+	static constexpr size_t getSize() {
+		return 0;
+	}
+};
+
 
 template <typename Class, typename... Rest>
 struct ChunkAllocator;
@@ -61,14 +81,18 @@ template <typename SubClass, int NUM_ELEMENTS, typename... Types>
 class MultiPoolFactory
 {
 private:
+	typedef struct ItemType  { char m_bytes[ComputeSize<SubClass, Types...>::getSize()]; } ItemType;
 	const size_t m_chunkSize = ComputeSize<SubClass, Types...>::getSize();
-	char *m_bytes;
 	size_t m_lastAlloc = 0;
 
 public:
 
+	char *m_bytes;
 	MultiPoolFactory() {
+		ComputeOffset<SubClass, Types...>::computeOffset();
 		m_bytes = new char[m_chunkSize * NUM_ELEMENTS];
+		for( int i = 0; i < NUM_ELEMENTS; i++ ) {
+		}
 	}
 
 	~MultiPoolFactory() {
@@ -123,6 +147,9 @@ struct C {
 	std::uint32_t b;
 };
 
+template <typename... Types>
+using multipool_t = std::vector<std::tuple<Types...>> ;
+
 class TestPool1 : public MultiPoolFactory<TestPool1, 10, A, B, C> {};
 class TestPool2 : public MultiPoolFactory<TestPool2, 10, C, A, B> {};
 
@@ -147,20 +174,13 @@ int main( int argc, char** argv )
 	B* b2 = tp1.getItemForIndex<B>(2);
 	B* b3 = tp1.getItemForIndex<B>(3);
 
+	C* c0 = tp1.getItemForIndex<C>(0);
+	C* c1 = tp1.getItemForIndex<C>(1);
+	C* c2 = tp1.getItemForIndex<C>(2);
+	C* c3 = tp1.getItemForIndex<C>(3);
 
-	/*{
-		std::cout << "Testing MultiPoolFactory\n";
-		std::cout << tp1.getOffsetForType<A>() << std::endl;
-		std::cout << tp1.getOffsetForType<B>() << std::endl;
-		std::cout << tp1.getOffsetForType<C>() << std::endl;
-		std::cout << tp1.getChunkSize() << std::endl;
-
-		std::cout << "Testing MultiPoolFactory\n";
-		std::cout << tp2.getOffsetForType<A>() << std::endl;
-		std::cout << tp2.getOffsetForType<B>() << std::endl;
-		std::cout << tp2.getOffsetForType<C>() << std::endl;
-		std::cout << tp2.getChunkSize() << std::endl;
-	}*/
+	multipool_t<A,B,C> mp1;
+	multipool_t<C,A,B> mp2;
 
 	return 0;
 }
