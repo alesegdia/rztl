@@ -89,7 +89,6 @@ public:
 			i++;
 			delete [] it;
 		}
-		printf("eliminados %d elementos.\n", i);
 	}
 
 	template <typename...ARGS>
