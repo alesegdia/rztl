@@ -56,6 +56,11 @@ public:
         return m_data[coordToIndex(col, row)];
     }
 
+    inline T& get( size_t col, size_t row )
+    {
+        return m_data[coordToIndex(col, row)];
+    }
+
     size_t cols() const
     {
         return m_cols;
