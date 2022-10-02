@@ -19,18 +19,18 @@ public:
     typedef std::shared_ptr<Matrix2D<T>> SharedPtr;
 
     Matrix2D( size_t cols, size_t rows ) {
-        resize(cols, rows);
+        Resize(cols, rows);
     }
 
     Matrix2D( size_t cols, size_t rows, T fill_value )
     {
-        resize(cols, rows);
-        fill(fill_value);
+        Resize(cols, rows);
+        FillCells(fill_value);
     }
 
     Matrix2D( const Matrix2D<int>& other )
-        : m_cols(other.cols()),
-          m_rows(other.rows()),
+        : m_cols(other.GetColsNumber()),
+          m_rows(other.GetRowsNumber()),
           m_data(other.m_data)
     {
 
@@ -44,39 +44,39 @@ public:
 
     }
 
-    inline void set( size_t col, size_t row, T value )
+    inline void SetCell( size_t col, size_t row, T value )
     {
         assert(col >= 0 && col < m_cols);
         assert(row >= 0 && row < m_rows);
-        m_data[coordToIndex(col, row)] = value;
+        m_data[CoordToIndex(col, row)] = value;
     }
 
-    inline T get( size_t col, size_t row ) const
+    inline T GetCell( size_t col, size_t row ) const
     {
-        return m_data[coordToIndex(col, row)];
+        return m_data[CoordToIndex(col, row)];
     }
 
-    inline T& get( size_t col, size_t row )
+    inline T& GetCell( size_t col, size_t row )
     {
-        return m_data[coordToIndex(col, row)];
+        return m_data[CoordToIndex(col, row)];
     }
 
-    size_t cols() const
+    size_t GetColsNumber() const
     {
         return m_cols;
     }
 
-    size_t rows() const
+    size_t GetRowsNumber() const
     {
         return m_rows;
     }
 
-    void fill( T fill_value )
+    void FillCells( T fill_value )
     {
         std::fill(m_data.begin(), m_data.end(), fill_value);
     }
 
-    void fill( size_t x1, size_t y1, size_t x2, size_t y2, T fill_value)
+    void FillCells( size_t x1, size_t y1, size_t x2, size_t y2, T fill_value)
     {
         assert(x1 < m_cols && x2 < m_cols);
         assert(y1 < m_rows && y2 < m_rows);
@@ -85,12 +85,12 @@ public:
         {
             for( size_t xx1 = x1; xx1 <= x2; xx1++ )
             {
-                set(xx1, yy1, fill_value);
+                SetCell(xx1, yy1, fill_value);
             }
         }
     }
 
-    void resize( size_t cols, size_t rows )
+    void Resize( size_t cols, size_t rows )
     {
         m_cols = cols;
         m_rows = rows;
@@ -101,31 +101,31 @@ public:
         m_data.resize(cols * rows);
     }
 
-    void resize( size_t cols, size_t rows, T defo )
+    void Resize( size_t cols, size_t rows, T defo )
     {
-        resize(cols, rows);
-        fill(defo);
+        Resize(cols, rows);
+        FillCells(defo);
     }
 
-    const std::vector<T>& data()
+    const std::vector<T>& GetData()
     {
         return m_data;
     }
 
-    void data(const std::vector<T>& new_data)
+    void SetData(const std::vector<T>& new_data)
     {
-        assert(new_data.size() == m_data.size());
+        assert(new_data.GetSize() == m_data.GetSize());
         m_data = new_data;
     }
 
-    void debugPrint()
+    void DebugPrint()
     {
         printf("cols: %d, rows: %d\n", m_cols, m_rows);
         for( int i = 0; i < m_rows; i++ )
         {
             for( int j = 0; j < m_cols; j++ )
             {
-                printf("%d", this->get(j, i));
+                printf("%d", this->GetCell(j, i));
             }
             printf("\n");
         }
@@ -139,7 +139,7 @@ public:
 
 private:
 
-    int coordToIndex( int x, int y ) const
+    int CoordToIndex( int x, int y ) const
     {
         return y * m_cols + x;
     }
@@ -153,12 +153,12 @@ template <typename T>
 void subcopy( const Matrix2D<T>& src, Matrix2D<T>& target,
               int subx, int suby, int subw, int subh )
 {
-    assert( src.cols() >= subw && src.rows() >= subh );
+    assert( src.GetColsNumber() >= subw && src.GetRowsNumber() >= subh );
     for( int x = 0; x < subw; x++ )
     {
         for( int y = 0; y < subh; y++ )
         {
-            target.set(x + subx, y + suby, src.get(x, y));
+            target.SetCell(x + subx, y + suby, src.GetCell(x, y));
         }
     }
 }
@@ -167,7 +167,7 @@ template <typename T>
 void subcopy( const Matrix2D<T>& src, Matrix2D<T>& target,
               int subx, int suby )
 {
-    subcopy<T>(src, target, subx, suby, src.cols(), src.rows());
+    subcopy<T>(src, target, subx, suby, src.GetColsNumber(), src.GetRowsNumber());
 }
 
 template <typename T>
@@ -185,12 +185,12 @@ class Matrix2DDebug
 public:
     void operator << ( const Matrix2D<T>& matrix )
     {
-        for( int y = 0; y < matrix.rows(); y++ )
+        for( int y = 0; y < matrix.GetRowsNumber(); y++ )
         {
-            for( int x = 0; x < matrix.cols(); x++ )
+            for( int x = 0; x < matrix.GetColsNumber(); x++ )
             {
                 std::cout << std::setw(3);
-                std::cout << matrix.get(x, y) << " ";
+                std::cout << matrix.GetCell(x, y) << " ";
             }
             std::cout << std::endl;
         }

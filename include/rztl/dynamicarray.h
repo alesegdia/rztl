@@ -20,7 +20,7 @@ protected:
 	size_t m_size = 0;
 	size_t m_capacity;
 
-	void innerRealloc( size_t realloc_step = REALLOC_STEP )
+	void Internal_Realloc( size_t realloc_step = REALLOC_STEP )
 	{
 		m_capacity += realloc_step;
 		void* p = realloc( m_data, m_capacity * sizeof(T) );
@@ -47,20 +47,20 @@ public:
 		}
 	}
 
-	void add( T item )
+	void Add( T item )
 	{
 		if( m_size+1 > m_capacity )
 		{
-			innerRealloc();
+			Internal_Realloc();
 		}
 
 		m_data[m_size] = item;
 		m_size++;
 	}
 
-	T& back()
+	T& GetBackElement()
 	{
-		if( !isEmpty() )
+		if( !IsEmpty() )
 		{
 			return m_data[m_size-1];
 		}
@@ -72,27 +72,27 @@ public:
 		return m_data[index];
 	}
 
-	void clear()
+	void Clear()
 	{
 		m_size = 0;
 	}
 
-	void removeLast()
+	void RemoveBackElement()
 	{
-		if( !isEmpty() ) m_size--;
+		if( !IsEmpty() ) m_size--;
 	}
 
-	bool isEmpty()
+	bool IsEmpty()
 	{
 		return m_size == 0;
 	}
 
-	size_t size()
+	size_t GetSize()
 	{
 		return m_size;
 	}
 
-	T* getRawData()
+	T* GetRawData()
 	{
 		return m_data;
 	}
