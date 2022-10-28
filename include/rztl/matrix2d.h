@@ -61,15 +61,25 @@ public:
         return m_data[CoordToIndex(col, row)];
     }
 
-    size_t GetColsNumber() const
-    {
-        return m_cols;
-    }
+	size_t GetColsNumber() const
+	{
+		return m_cols;
+	}
 
-    size_t GetRowsNumber() const
-    {
-        return m_rows;
-    }
+	size_t GetRowsNumber() const
+	{
+		return m_rows;
+	}
+
+	int GetColsNumberInt() const
+	{
+		return int(m_cols);
+	}
+
+	int GetRowsNumberInt() const
+	{
+		return int(m_rows);
+	}
 
     void FillCells( T fill_value )
     {
@@ -121,7 +131,7 @@ public:
     void DebugPrint()
     {
         printf("cols: %d, rows: %d\n", m_cols, m_rows);
-        for( int i = 0; i < m_rows; i++ )
+        for( size_t i = 0; i < m_rows; i++ )
         {
             for( int j = 0; j < m_cols; j++ )
             {
