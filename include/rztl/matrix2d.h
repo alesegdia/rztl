@@ -149,7 +149,7 @@ public:
 
 private:
 
-    int CoordToIndex( int x, int y ) const
+    int CoordToIndex( size_t x, size_t y ) const
     {
         return y * m_cols + x;
     }
