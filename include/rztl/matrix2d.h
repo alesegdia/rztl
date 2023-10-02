@@ -151,7 +151,7 @@ private:
 
     int CoordToIndex( size_t x, size_t y ) const
     {
-        return y * m_cols + x;
+        return int(y * m_cols + x);
     }
 
     std::vector<T> m_data;
