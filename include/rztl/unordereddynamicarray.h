@@ -33,4 +33,57 @@ public:
 private:
 };
 
+
+template <typename T>
+class Stack
+{
+public:
+	const T& Top() const
+	{
+		return m_data.back();
+	}
+
+	const T& operator[](int index) const
+	{
+		return m_data[index];
+	}
+
+	void Push(const T& item)
+	{
+		m_data.push_back(item);
+		m_stackIndex++;
+	}
+
+	bool Pop(T& t)
+	{
+		if (m_data.empty())
+		{
+			return false;
+		}
+		else
+		{
+			t = Top();
+			m_stackIndex--;
+			return true;
+		}
+	}
+
+	int Size()
+	{
+		return Count();
+	}
+
+	int Count()
+	{
+		return m_stackIndex;
+	}
+
+private:
+	std::vector<T> m_data;
+	int m_stackIndex = 0;
+
+};
+
+
+
 }
