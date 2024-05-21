@@ -144,27 +144,22 @@ namespace rztl {
 	typedef Vec2<float> Vec2f;
 	typedef Vec2<size_t> Vec2sz;
 
-	namespace allig {
-		namespace math {
-
-			template <typename T>
-			T distance(const Vec2<T>& a, const Vec2<T>& b)
-			{
-				double dx = double(a.GetX()) - double(b.GetX());
-				double dy = double(a.GetY()) - double(b.GetY());
-				return sqrt(dx * dx + dy * dy);
-			}
-
-			template <typename T>
-			T distancef(const Vec2<T>& a, const Vec2<T>& b)
-			{
-				float dx = float(a.GetX()) - float(b.GetX());
-				float dy = float(a.GetY()) - float(b.GetY());
-				return sqrtf(dx * dx + dy * dy);
-			}
-
-		}
+	template <typename T>
+	T distance(const Vec2<T>& a, const Vec2<T>& b)
+	{
+		double dx = double(a.GetX()) - double(b.GetX());
+		double dy = double(a.GetY()) - double(b.GetY());
+		return sqrt(dx * dx + dy * dy);
 	}
+
+	template <typename T>
+	T distancef(const Vec2<T>& a, const Vec2<T>& b)
+	{
+		float dx = float(a.GetX()) - float(b.GetX());
+		float dy = float(a.GetY()) - float(b.GetY());
+		return sqrtf(dx * dx + dy * dy);
+	}
+
 
 	template <typename T>
 	Vec2<T> ortho_to_iso(const Vec2<T>& ortho)
