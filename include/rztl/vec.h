@@ -164,7 +164,7 @@ namespace rztl {
 
         static Vec2<T> ZeroVec()
         {
-            return aether::math::Vec2<T>(T(0), T(0));
+            return Vec2<T>(T(0), T(0));
         }
 
         T SquaredModulus()

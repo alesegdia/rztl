@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <cassert>
 
+#include "vec.h"
 
 namespace rztl {
 
@@ -147,7 +148,7 @@ public:
         return *this;
     }
 
-    bool IsValidCellCoord(const aether::math::Vec2i& coord)
+    bool IsValidCellCoord(const Vec2i& coord)
     {
         return IsValidCellCoord(coord.GetX(), coord.GetY());
     }
