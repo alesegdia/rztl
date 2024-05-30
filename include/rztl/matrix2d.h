@@ -148,11 +148,6 @@ public:
         return *this;
     }
 
-    bool IsValidCellCoord(const Vec2i& coord)
-    {
-        return IsValidCellCoord(coord.GetX(), coord.GetY());
-    }
-
     bool IsValidCellCoord(int x, int y)
     {
         return x >= 0 && x < GetColsNumber() &&
