@@ -237,7 +237,7 @@ namespace rztl {
         return Vec2<T>(2 * y + x, 2 * y - x);
     }
 
-    float lerp(float a, float b, float t);
+    //float lerp(float a, float b, float t);
 
     template <typename T>
     Vec2<T> lerp(const Vec2<T>& v0, const Vec2<T>& v1, float t)

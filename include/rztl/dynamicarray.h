@@ -1,19 +1,15 @@
 
 #pragma once
 
-#include <cstdint>
-#include <cstdlib>
+#include <vector>
+#include <queue>
+#include <stdexcept>
+#include <memory>
 
 namespace rztl
 {
 
 
-#pragma once
-
-#include <vector>
-#include <queue>
-#include <stdexcept>
-#include <memory>
 
 	/*
 	template <typename T>
