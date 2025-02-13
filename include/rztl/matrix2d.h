@@ -45,6 +45,34 @@ public:
 
     }
 
+	Matrix2D(const std::vector<T>& data, size_t cols, size_t rows)
+		: m_cols(cols)
+		, m_rows(rows)
+		, m_data(data)
+	{
+		assert(data.size() == cols * rows);
+	}
+
+	Matrix2D(const std::vector<std::vector<T>>& data)
+	{
+		m_rows = data.size();
+		m_cols = data[0].size();
+		m_data.reserve(m_rows * m_cols);
+		for (size_t i = 0; i < m_rows; i++)
+		{
+			for (size_t j = 0; j < m_cols; j++)
+			{
+				m_data.push_back(data[i][j]);
+			}
+		}
+
+		// check that all rows have the same size
+		for (size_t i = 1; i < m_rows; i++)
+		{
+			assert(data[i].size() == m_cols);
+		}
+	}
+
     inline void SetCell( size_t col, size_t row, T value )
     {
         assert(col >= 0 && col < m_cols);
@@ -56,6 +84,11 @@ public:
     {
         return m_data[CoordToIndex(col, row)];
     }
+
+	inline const T& GetCellConstRef(size_t col, size_t row) const
+	{
+		return m_data[CoordToIndex(col, row)];
+	}
 
     inline T& GetCell( size_t col, size_t row )
     {
