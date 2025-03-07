@@ -177,6 +177,7 @@ public:
 
     Matrix2D<T>& operator==(const Matrix2D<T>& m)
     {
+        assert(m_cols == m.m_cools && m_rows == m.m_rows);
         std::copy( m.m_data.begin(), m.m_data.end(), this->m_data.begin() );
         return *this;
     }

@@ -9,8 +9,8 @@ template <typename T>
 class UnorderedDynamicArray : public DynamicArray<T>
 {
 public:
-	UnorderedDynamicArray( size_t initial_size = DynamicArray<T>::INITIAL_SIZE )
-		: DynamicArray<T>(initial_size) {}
+	UnorderedDynamicArray( size_t initial_size = DynamicArray<T>::kDefaultInitialCapacity, size_t realloc_step = DynamicArray<T>::kDefaultReallocStep )
+		: DynamicArray<T>(initial_size, realloc_step) {}
 	virtual ~UnorderedDynamicArray() {}
 
 	void removeIndex( int index )

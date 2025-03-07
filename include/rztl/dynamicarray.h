@@ -106,12 +106,11 @@ namespace rztl
 template <typename T>
 class DynamicArray
 {
+public:
+	static const size_t kDefaultInitialCapacity = 16;
+	static const size_t kDefaultReallocStep = 8;
 
 protected:
-
-	static const size_t INITIAL_SIZE = 128;
-	static const size_t REALLOC_STEP = 16;
-
 	T* m_data;
 	size_t m_size = 0;
 	size_t m_capacity;
@@ -129,12 +128,17 @@ protected:
 
 public:
 
-	DynamicArray( size_t initial_size = INITIAL_SIZE, size_t realloc_step = REALLOC_STEP )
+	size_t GetReallocStep()
 	{
-		m_capacity = initial_size;
-		m_reallocStep = realloc_step;
+		return m_reallocStep;
+	}
+
+	DynamicArray( size_t initialCapacity = kDefaultInitialCapacity, size_t reallocStep = kDefaultReallocStep )
+	{
+		m_capacity = initialCapacity;
+		m_reallocStep = reallocStep;
 		m_size = 0;
-		m_data = ((T*)malloc( initial_size * sizeof(T) ));
+		m_data = ((T*)malloc( initialCapacity * sizeof(T) ));
 	}
 
 	virtual ~DynamicArray( )
@@ -188,6 +192,11 @@ public:
 	size_t GetSize()
 	{
 		return m_size;
+	}
+
+	size_t GetCapacity()
+	{
+		return m_capacity;
 	}
 
 	T* GetRawData()

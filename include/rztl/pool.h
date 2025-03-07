@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <type_traits>
@@ -10,117 +9,136 @@
 namespace rztl
 {
 
-template <typename T>
-class Placeholder
-{
-private:
-	uint8_t bytes[sizeof(T)];
-public:
-	operator T& () { return (T*)bytes; }
-	operator const T& () const { return (T*)bytes; }
-};
+    template <typename T>
+    class Pool
+    {
+    private:
+        union Item {
+            Item() : state{} {}
+            ~Item() {}
+            T obj_data;
+            struct {
+                Item* next;
+                bool in_use = false;
+            } state;
+        };
 
-template <typename T>
-class Pool
-{
+    public:
+        static constexpr uint16_t kPageSize = 4096;
+        static constexpr uint16_t kNumItemsPerBlock = kPageSize / sizeof(Item);
 
-private:
+		struct PoolBlock {
+			PoolBlock()
+            {
+				for (size_t i = 0; i < kNumItemsPerBlock; i++)
+				{
+                    blockData[i].state.next = (i < kNumItemsPerBlock - 1) ? &blockData[i + 1] : nullptr;
+				}
+            }
+			Item blockData[kNumItemsPerBlock];
+		};
 
-	union Item {
-		Item() : state{} {}
-		~Item() {}
-		T obj_data;
-		struct {
-			Item* next;
-			bool in_use = false;
-		} state;
-	};
 
+    public:
 
-	Item *free_first, *free_last;
-	size_t bytes_per_block, num_items;
-	std::vector<Item*> block_list;
-
-	// ugly fix!
-	std::vector<T*> items_in_use;
-
-	void AllocBlock()
-	{
-		// allocate items
-		Item* new_block = new Item[100];
-
-		// build linked list of free elements
-		for( int i = 0; i < 100; i++ )
+        Pool()
 		{
-			new_block[i].state.next = new_block+i+1;
-		}
-
-		// mark last pool element
-		new_block[99].state.next = NULL;
-
-		// assign first available item
-		free_first = new_block;
-
-		free_last = &new_block[99];
-
-		// push block to block_list
-		block_list.push_back(new_block);
-	}
-
-public:
-
-	static constexpr uint16_t PAGE_SIZE = 4096;
-	static constexpr uint16_t MIN_ITEMS = 32;
-	static constexpr uint16_t MIN_NUM_PAGES = 2;
-
-	Pool( uint32_t count_items_per_block = MIN_ITEMS )
-	{
-		AllocBlock();
-	}
-
-	~Pool(){
-		int i = 0;
-		for( auto it : items_in_use )
-		{
-			it->~T();
-		}
-		for( auto it : block_list )
-		{
-			i++;
-			delete [] it;
-		}
-	}
-
-	template <typename...ARGS>
-	T* Create(ARGS&&...args)
-	{
-		if( free_first->state.next == NULL )
-		{
+			mFreeFirst = nullptr;
+			mFreeLast = nullptr;
 			AllocBlock();
 		}
 
-		Item* item = free_first;
-		free_first = free_first->state.next;
+        ~Pool() {
+            Clear();
+        }
 
-		T* obj = new(&item->obj_data) T(args...);
-		items_in_use.push_back(obj);
+        template <typename...ARGS>
+        T* Create(ARGS&&...args)
+        {
+            if (mFreeFirst->state.next == nullptr)
+            {
+                AllocBlock();
+            }
 
-		return obj;
-	}
+            Item* item = mFreeFirst;
+            mFreeFirst = mFreeFirst->state.next;
 
-	/*
-	 * Llama al destructor del objeto y asigna el free_first
-	 */
-	void Destroy( T* e )
-	{
-		items_in_use.erase( std::find( items_in_use.begin(), items_in_use.end(), e ) );
-		e->~T();
-		free_last->state.next = (Item*)e;
-		free_last = (Item*)e;
-		free_last->state.next = NULL;
-	}
+            T* obj = new(&item->obj_data) T(std::forward<ARGS>(args)...);
 
+            mNumItemsInUse++;
+            return obj;
+        }
 
-};
+        /*
+         * Llama al destructor del objeto y asigna el mFreeFirst
+         */
+        void Destroy(T* e)
+        {
+            e->~T();
+            mFreeLast->state.next = (Item*)e;
+            mFreeLast = (Item*)e;
+            mFreeLast->state.next = nullptr;
+            mNumItemsInUse--;
+        }
+
+        // possible improvement: don't clear mBlockList, but then we need to take care
+        // about properly linking one block with another
+        void Clear()
+        {
+            // go through all the blocks, and for each item, if it's in use, call teh destructor
+			for (auto block : mBlockList)
+			{
+				for (size_t i = 0; i < kNumItemsPerBlock; i++)
+				{
+					if (block.blockData[i].state.in_use)
+					{
+						block.blockData[i].obj_data.~T();
+					}
+				}
+			}
+
+            mFreeFirst = nullptr;
+            mFreeLast = nullptr;
+            mNumItemsInUse = 0;
+            mBlockList.clear();
+			AllocBlock();
+        }
+
+        size_t GetSize() const {
+            return mNumItemsInUse;
+        }
+
+        size_t GetBlockListCount() const {
+            return mBlockList.size();
+        }
+
+        size_t GetTotalAllocatedMemory() const {
+            return mBlockList.size() * kNumItemsPerBlock * sizeof(Item);
+        }
+
+        size_t GetUsedMemory() const {
+            return mNumItemsInUse * sizeof(T);
+        }
+
+		size_t GetNumItemsPerBlock() const {
+			return kNumItemsPerBlock;
+		}
+
+        private:
+            Item* mFreeFirst;
+            Item* mFreeLast;
+            std::vector<PoolBlock> mBlockList;
+
+            size_t mNumItemsInUse = 0;
+
+            void AllocBlock()
+            {
+                mBlockList.emplace_back();
+				auto newBlock = mBlockList.back();
+                mFreeFirst = newBlock.blockData;
+                mFreeLast = newBlock.blockData + kNumItemsPerBlock - 1;
+            }
+
+    };
 
 }
