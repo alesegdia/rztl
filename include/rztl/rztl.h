@@ -10,15 +10,20 @@
 
 
 namespace rztl {
-	template <typename T>
+	template <typename T, size_t BufferSize>
 	class SnapshotBuffer
 	{
 	public:
-		SnapshotBuffer(size_t capacity)
-			: m_capacity(capacity)
+		static constexpr size_t kBufferSize = BufferSize;
+
+		SnapshotBuffer(const T& defaultValue)
 		{
 			m_data = new T[capacity];
 			m_currentTop = 0;
+			for(size_t i = 0; i < kBufferSize; i++)
+			{
+				m_data[i] = defaultValue;
+			}
 		}
 
 		~SnapshotBuffer()
@@ -41,20 +46,33 @@ namespace rztl {
 
 		void Push(const T& elementToAdd)
 		{
-			m_data[m_capacity] = elementToAdd;
-			m_capacity++;
 			m_currentTop = (m_currentTop + 1) % m_capacity;
+
+			m_data[m_capacity] = elementToAdd;
+			m_currentBottom = (m_currentBottom + 1) % m_capacity;
+
 		}
 
 	private:
 		int TranslateIndex(int index)
 		{
-			return index + m_currentTop % m_capacity;
+			return index + m_currentTop % kBufferSize;
+		}
+
+		size_t GetTopIndex()
+		{
+			return m_currentTop;
+		}
+
+		size_t GetBottomIndex()
+		{
+			return m_currentBottom;
 		}
 
 		T* m_data;
 		size_t m_capacity;
 		size_t m_currentTop;
+		size_t m_currentBottom;
 
 	};
 }
