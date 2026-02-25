@@ -151,6 +151,22 @@ public:
         FillCells(defo);
     }
 
+    void ResizePreservingData(size_t cols, size_t rows)
+    {
+		if(cols == m_cols && rows == m_rows) return; // no need to resize
+        std::vector<T> new_data(cols * rows);
+        for (size_t y = 0; y < std::min(rows, m_rows); y++)
+        {
+            for (size_t x = 0; x < std::min(cols, m_cols); x++)
+            {
+                new_data[y * cols + x] = GetCell(x, y);
+            }
+        }
+        m_cols = cols;
+        m_rows = rows;
+		m_data = std::move(new_data);
+    }
+
     const std::vector<T>& GetData()
     {
         return m_data;
